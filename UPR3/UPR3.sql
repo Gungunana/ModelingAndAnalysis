@@ -1,0 +1,128 @@
+CREATE DATABASE Indexing
+
+Create table Users(
+	Id INT NOT NULL
+)
+
+SELECT FLOOR(RAND()*100)
+
+GO
+INSERT INTO Users VALUES (FLOOR(RAND()*100))
+
+GO 100
+
+SET STATISTICS IO ON
+
+GO
+DBCC DROPCLEANBUFFERS
+DBCC FREESYSTEMCACHE('All')
+GO
+
+SELECT Id From Users
+WHERE Id = 5
+
+CREATE CLUSTERED INDEX IX_Id
+ON Users(Id)
+
+DROP TABLE Users
+
+CREATE TABLE Users(
+	Id INT PRIMARY KEY
+)
+
+CREATE NONCLUSTERED INDEX IX_Id
+ON Users(Id)
+
+
+CREATE TABLE Users(
+	Id INT NOT NULL,
+	Tag INT NOT NULL
+)
+
+GO
+INSERT INTO Users VALUES (FLOOR(RAND()*100), FLOOR(RAND()*100))
+
+GO 100
+
+SELECT * FROM Users
+
+CREATE CLUSTERED INDEX IX_Phonebook
+ON Users(Id, Tag)
+
+DROP INDEX IX_Phonebook ON Users
+
+SELECT Id, Tag FROM Users
+WHERE Id = 4
+
+CREATE NONCLUSTERED INDEX IX_Phonebook
+ON Users(Id) INCLUDE (Tag)
+WHERE Id > 5
+
+SELECT SUM(Id), Tag FROM Users
+
+USE msdb
+
+EXEC sp_add_job @job_name = 'Backup database'
+
+EXEC sp_add_jobstep 
+	@job_name = 'Backup database',
+	@step_name = 'Execute query',
+	@command = 'BACKUP DATABASE Indexing'
+
+EXEC sp_add_schedule 
+	@schedule_name = 'Schedule backup',
+	@freq_type = 1,
+	@active_start_time = 200000
+
+EXEC sp_attach_schedule 
+	@job_name = 'Backup database',
+	@schedule_name = 'Schedule backup'
+
+
+
+CREATE TABLE Users(
+	Id INT PRIMARY KEY IDENTITY(1,1) NOT NULL,
+	Firstaname NVARCHAR(50) UNIQUE,
+	Lastaname NVARCHAR(50)
+)
+
+SELECT left(NEWID() ,6)
+
+GO
+INSERT INTO Users VALUES (NEWID(), NEWID())
+GO 40
+
+SELECT * FROM Users
+
+BEGIN TRANSACTION [Trans]
+	BEGIN TRY
+		INSERT INTO Users VALUES ('C7CDFB43-1B76-40A6-B40F-7EEFAF717677', NEWID())
+		INSERT INTO Users VALUES (NEWID(), NEWID())
+
+		COMMIT TRANSACTION [Trans]
+	END TRY
+
+	BEGIN CATCH
+		ROLLBACK TRANSACTION [Trans]
+	END CATCH
+
+SELECT COUNT(*) FROM Users
+
+BEGIN TRANSACTION
+
+	INSERT INTO Users VALUES ('C7CDFB43-1B76-40A6-B40F-7EEFAF717677', NEWID())
+	INSERT INTO Users VALUES (NEWID(), NEWID())
+
+ROLLBACK TRANSACTION
+
+SELECT *
+INTO UsersCopy
+FROM Users
+
+SELECT * FROM UsersCopy
+
+SELECT * FROM Users
+
+EXCEPT
+
+SELECT * FROM UsersCopy
